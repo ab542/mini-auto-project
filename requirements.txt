@@ -1,0 +1,4 @@
+minium
+pytest>=7.0.0
+pytest-html
+pytest-xdist

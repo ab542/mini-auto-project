@@ -1,0 +1,10 @@
+{
+  "project_path": "C:\\Users\\31493\\WeChatProjects\\miniprogram-5",
+  "dev_tool_path": "D:/Program Files (x86)/Tencent/微信web开发者工具/cli.bat",
+  "platform": "ide",
+  "outputs": "outputs",
+  "debug_mode": "debug",
+  "auto_port": 9420,
+  "enable_app_log": false,
+  "request_timeout": 60
+}
