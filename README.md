@@ -132,13 +132,37 @@ self.assert_element_exists("#send-code-btn", "验证码按钮未加载")
 ### 操作结果
 
 ```python
-# 点击提交空购物车 → 断言错误提示
-cart.tap("#submit-btn")
-self.assert_text_in_page("购物车为空", "未弹出空购物车提示")
-
 # 断言金额计算正确
 freight = order.get_inner_text("#freight-amount")
 self.assertTrue(freight and float(freight) >= 0, f"运费异常: {freight}")
+```
+
+### Toast 弹窗（一闪而过的提示）
+
+Toast 展示 1-2 秒就消失，等它出现再查找来不及。用 **Hook 拦截** 在底层就抓住它：
+
+```python
+# 1. 操作前开启捕获
+self.start_capture_toast()
+
+# 2. 触发操作（点击提交空购物车）
+cart.tap("#submit-btn")
+
+# 3. 断言捕获到的 Toast 内容
+self.assert_toast("购物车为空", "未弹出空购物车提示")
+```
+
+原理：`start_capture_toast()` 通过 `app.hook_wx_method("showToast")` 拦截小程序的 `wx.showToast` 调用，把 title 记下来。后续 `get_captured_toast()` 直接读取已记录的内容，不存在"消失找不到"的问题。也支持连续捕获：
+
+```python
+self.start_capture_toast()
+
+# 提交 → 弹出"提交成功"
+self.tap("#submit-btn")
+
+# 快速连续断言
+self.assert_toast("提交成功")
+self.assert_toast("即将刷新列表")  # 如果连续弹了两次 Toast
 ```
 
 ### 状态变化
