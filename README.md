@@ -94,50 +94,97 @@ pytest -n 2
 
 ## 编写测试用例
 
-### 方式一：pytest 风格（推荐）
-
 ```python
-import pytest
-
-@pytest.mark.smoke
-def test_index_page_load(mini):
-    """验证首页正常加载"""
-    mini.app.switch_tab("/pages/index/index")
-    mini.page.wait_for(3)
-    assert mini.page.get_element("view.container")
-
-
-@pytest.mark.p0
-def test_navigation(mini):
-    """验证页面跳转"""
-    mini.app.navigate_to("/pages/detail/detail")
-    mini.page.wait_for(3)
-    assert mini.page.get_element("text", inner_text="详情")
-```
-
-### 方式二：Page Object 模式
-
-```python
+# cases/test_login.py
 from base.base_case import BaseCase
-from pages.index_page import IndexPage
+from pages.login_page import LoginPage
 
-class TestIndex(BaseCase):
-    def test_index_title(self):
-        index = IndexPage(self)
-        index.goto()
-        self.assert_text_in_page("首页")
+
+class TestLogin(BaseCase):
+    def test_login_page_loaded(self):
+        """验证登录页正常加载"""
+        login = LoginPage(self)
+        login.goto()
+        self.assert_element_exists("#phone-input", "手机号输入框未加载")
+
+    def test_login_success(self):
+        """验证登录成功"""
+        login = LoginPage(self)
+        login.goto()
+        login.input_phone("13800138000")
+        login.send_verify_code()
+        login.input_verify_code("123456")
+        login.submit()
+        self.assert_text_in_page("欢迎回来", "未跳转到首页")
 ```
 
-### 方式三：unittest / MiniTest 风格
+## 断言示例
+
+> 核心原则：**断言结果，而非过程**。不要断言操作成功，断言操作后页面的预期变化。
+
+### 页面加载
 
 ```python
-import minium
-
-class MyTest(minium.MiniTest):
-    def test_something(self):
-        self.page.wait_for(3)
-        self.assertIsNotNone(self.page.get_element("button"))
+self.assert_element_exists("#login-phone", "手机号输入框未加载")
+self.assert_element_exists("#send-code-btn", "验证码按钮未加载")
 ```
+
+### 操作结果
+
+```python
+# 点击提交空购物车 → 断言错误提示
+cart.tap("#submit-btn")
+self.assert_text_in_page("购物车为空", "未弹出空购物车提示")
+
+# 断言金额计算正确
+freight = order.get_inner_text("#freight-amount")
+self.assertTrue(freight and float(freight) >= 0, f"运费异常: {freight}")
+```
+
+### 状态变化
+
+```python
+# 选择优惠券 → 断言金额变化
+before = order.get_inner_text("#total-price")
+order.tap_text("满100减20")
+after = order.get_inner_text("#total-price")
+self.assertNotEqual(before, after, "优惠后金额未变化")
+```
+
+### 列表数据
+
+```python
+# 搜索后断言列表非空
+items = goods.get_elements(".goods-item")
+self.assertGreater(len(items), 0, "搜索结果为空")
+
+# 断言价格升序
+prices = goods.get_all_prices()
+self.assertGreaterEqual(len(prices), 2, f"商品数不足: {len(prices)}")
+self.assertEqual(prices, sorted(prices), f"排序不正确: {prices}")
+```
+
+### 页面跳转
+
+```python
+home.tap("#banner-0")
+self.page.wait_for(3)
+current = self.app.get_current_page()
+self.assertIn("goods-detail", current.path, f"跳转失败，当前路径: {current.path}")
+```
+
+### 常用断言速查
+
+| 场景 | 推荐断言 |
+|------|----------|
+| 元素存在 | `assert_element_exists(selector)` |
+| 文案出现 | `assert_text_in_page(text)` |
+| 数值相等 | `assertEqual(a, b)` |
+| 数值不等 | `assertNotEqual(a, b)` |
+| 大于/大于等于 | `assertGreater(a, b)` / `assertGreaterEqual(a, b)` |
+| 列表非空 | `assertGreater(len(list), 0)` |
+| 布尔为真 | `assertTrue(condition)` |
+| 字符串包含 | `assertIn(sub, full)` |
 
 ## 元素定位速查
 
