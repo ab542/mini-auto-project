@@ -15,12 +15,15 @@ class TestMessage(BaseCase):
 
         # 2. 操作消息列表
         msg = MessagePage(self)
-
-        # 断言列表不为空
         message_list = msg.get_message_list()
+
+        # 列表为空时打印页面结构，方便定位问题
+        if not message_list:
+            msg.debug_page_structure()
+
         self.assertTrue(
             len(message_list) > 0,
-            "消息列表为空，无法测试点击跳转"
+            "消息列表为空，无法测试点击跳转——查看上方 DEBUG 输出确认元素渲染结构"
         )
 
         # 记录第一条消息的联系人名称
